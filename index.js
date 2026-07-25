@@ -6,7 +6,6 @@ app.use(express.json());
 
 let globalCapes = {};
 
-// Capas gratuitas/padrões permitidas para todos
 const ALLOWED_CAPES = new Set([
     "15th_Anniversary", "2011", "2012", "2013", "2015", "2016", 
     "Bacon", "Birthday", "Cherry_Blossom", "cheapsh0t", 
@@ -22,7 +21,6 @@ const ALLOWED_CAPES = new Set([
     "Donator"
 ]);
 
-// Capas pagas/exclusivas e os UUIDs que possuem permissão de uso (vírgulas corrigidas aqui)
 const PAID_CAPES_WHITELIST = {
     "Developer": [
         "7fc49989-b62b-4877-833a-19ced916cf43"
