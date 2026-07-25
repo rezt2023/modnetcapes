@@ -18,7 +18,7 @@ const ALLOWED_CAPES = new Set([
     "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
     "Translator", "Turtle", "Valentine", "Vanilla", 
     "Yearn", "Zombie_Horse", "Developer", "YouTuber",
-    "Donator"
+    "Donator", "Acreano"
 ]);
 
 const PAID_CAPES_WHITELIST = {
@@ -30,6 +30,10 @@ const PAID_CAPES_WHITELIST = {
         "a1541f0e-a467-403b-bdf2-759cb33647bf"
     ],
     "Donator": [
+        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "a1541f0e-a467-403b-bdf2-759cb33647bf"
+    ]
+    "Acreano": [
         "7fc49989-b62b-4877-833a-19ced916cf43",
         "a1541f0e-a467-403b-bdf2-759cb33647bf"
     ]
