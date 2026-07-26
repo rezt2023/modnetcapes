@@ -23,8 +23,7 @@ const ALLOWED_CAPES = new Set([
 
 const PAID_CAPES_WHITELIST = {
     "Developer": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
-        "391d0bc2-1210-402e-88d4-063a1d30dc7c"
+        "7fc49989-b62b-4877-833a-19ced916cf43"
     ],
     "YouTuber": [
         "7fc49989-b62b-4877-833a-19ced916cf43",
