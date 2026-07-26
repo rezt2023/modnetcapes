@@ -40,16 +40,6 @@ const PAID_CAPES_WHITELIST = {
         "7fc49989-b62b-4877-833a-19ced916cf43",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
-    ],
-    "Sakura.gif": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
-        "a1541f0e-a467-403b-bdf2-759cb33647bf",
-        "391d0bc2-1210-402e-88d4-063a1d30dc7c"
-    ],
-    "CatGirl.gif": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
-        "a1541f0e-a467-403b-bdf2-759cb33647bf",
-        "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ]
 };
 
