@@ -127,7 +127,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 
 app.get('/netcapes/exclusive', (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.2.0") {
+  if (clientVersion < "1.3.0") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
   res.json(PAID_CAPES_WHITELIST);
@@ -135,7 +135,7 @@ app.get('/netcapes/exclusive', (req, res) => {
 
 app.get('/netcapes', (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.2.0") {
+  if (clientVersion < "1.3.0") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
 
@@ -155,7 +155,7 @@ app.get('/netcapes', (req, res) => {
 
 app.post('/netcapes', (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.2.0") {
+  if (clientVersion < "1.3.0") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
 
