@@ -6,6 +6,11 @@ app.use(express.json());
 
 let globalCapes = {};
 
+// Configurações de Versão e Atualização do Mod (Altere aqui nas próximas atualizações)
+const LATEST_MOD_VERSION = "1.3.0";
+const MIN_SUPPORTED_VERSION = "1.3.0";
+const MOD_DOWNLOAD_URL = "https://github.com/rezt2023/modnetcapes/releases/download/master/netcapes.jar";
+
 const ALLOWED_CAPES = new Set([
     "15th_Anniversary", "2011", "2012", "2013", "2015", "2016", 
     "Bacon", "Birthday", "Cherry_Blossom", "cheapsh0t", 
@@ -125,64 +130,71 @@ const PAID_CAPES_WHITELIST = {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+app.get('/netcapes/version', (req, res) => {
+    res.json({
+        latest_version: LATEST_MOD_VERSION,
+        download_url: MOD_DOWNLOAD_URL
+    });
+});
+
 app.get('/netcapes/exclusive', (req, res) => {
-  const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.0") {
-    return res.status(426).json({ error: "Outdated version. Please update your mod." });
-  }
-  res.json(PAID_CAPES_WHITELIST);
+    const clientVersion = req.headers['x-mod-version'] || "1.0.0";
+    if (clientVersion < MIN_SUPPORTED_VERSION) {
+        return res.status(426).json({ error: "Outdated version. Please update your mod." });
+    }
+    res.json(PAID_CAPES_WHITELIST);
 });
 
 app.get('/netcapes', (req, res) => {
-  const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.0") {
-    return res.status(426).json({ error: "Outdated version. Please update your mod." });
-  }
-
-  let responseArray = [];
-  for (let uuid in globalCapes) {
-    let capeName = globalCapes[uuid];
-    
-    if (ALLOWED_CAPES.has(capeName) || (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid))) {
-      responseArray.push({
-        uuid: uuid,
-        cape_name: capeName
-      });
+    const clientVersion = req.headers['x-mod-version'] || "1.0.0";
+    if (clientVersion < MIN_SUPPORTED_VERSION) {
+        return res.status(426).json({ error: "Outdated version. Please update your mod." });
     }
-  }
-  res.json(responseArray);
+
+    let responseArray = [];
+    for (let uuid in globalCapes) {
+        let capeName = globalCapes[uuid];
+        
+        if (ALLOWED_CAPES.has(capeName) || (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid))) {
+            responseArray.push({
+                uuid: uuid,
+                cape_name: capeName
+            });
+        }
+    }
+    res.json(responseArray);
 });
 
 app.post('/netcapes', (req, res) => {
-  const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.0") {
-    return res.status(426).json({ error: "Outdated version. Please update your mod." });
-  }
-
-  const { uuid, cape_name } = req.body;
-
-  if (!uuid || !UUID_REGEX.test(uuid)) {
-    return res.status(400).json({ error: 'Invalid or missing UUID' });
-  }
-
-  if (!cape_name || cape_name === '') {
-    delete globalCapes[uuid];
-    return res.json({ success: true });
-  }
-
-  if (PAID_CAPES_WHITELIST[cape_name]) {
-    if (!PAID_CAPES_WHITELIST[cape_name].includes(uuid)) {
-      return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+    const clientVersion = req.headers['x-mod-version'] || "1.0.0";
+    if (clientVersion < MIN_SUPPORTED_VERSION) {
+        return res.status(426).json({ error: "Outdated version. Please update your mod." });
     }
-  } 
-  else if (!ALLOWED_CAPES.has(cape_name)) {
-    return res.status(403).json({ error: 'Forbidden: Unauthorized cape name' });
-  }
 
-  globalCapes[uuid] = cape_name;
-  res.json({ success: true });
+    const { uuid, cape_name } = req.body;
+
+    if (!uuid || !UUID_REGEX.test(uuid)) {
+        return res.status(400).json({ error: 'Invalid or missing UUID' });
+    }
+
+    if (!cape_name || cape_name === '') {
+        delete globalCapes[uuid];
+        return res.json({ success: true });
+    }
+
+    if (PAID_CAPES_WHITELIST[cape_name]) {
+        if (!PAID_CAPES_WHITELIST[cape_name].includes(uuid)) {
+            return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+        }
+    } 
+    else if (!ALLOWED_CAPES.has(cape_name)) {
+        return res.status(403).json({ error: 'Forbidden: Unauthorized cape name' });
+    }
+
+    globalCapes[uuid] = cape_name;
+    res.json({ success: true });
 });
 
 app.listen(PORT, () => {
-  console.log(`Servidor seguro rodando na porta ${PORT}`);
+    console.log(`Servidor seguro rodando na porta ${PORT}`);
 });
