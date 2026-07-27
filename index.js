@@ -25,7 +25,10 @@ async function connectDB() {
         process.exit(1);
     }
     try {
-        const client = new MongoClient(MONGO_URI);
+        const client = new MongoClient(MONGO_URI, {
+            tls: true,
+            tlsAllowInvalidCertificates: true
+        });
         await client.connect();
         db = client.db("netcapes_db");
         globalCapesCollection = db.collection("globalCapes");
