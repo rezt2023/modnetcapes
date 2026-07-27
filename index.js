@@ -52,7 +52,7 @@ const ALLOWED_CAPES = new Set([
     "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
     "Translator", "Turtle", "Valentine", "Vanilla", 
     "Yearn", "Zombie_Horse", "Developer", "YouTuber",
-    "Donator", "Acreano"
+    "Donator", "Acreano", "Nitro"
 ]);
 
 const PAID_CAPES_WHITELIST = {
@@ -153,7 +153,8 @@ const PAID_CAPES_WHITELIST = {
         "7fc49989-b62b-4877-833a-19ced916cf43",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
-    ]
+    ],
+    "Nitro": [] // Começa vazia e gerencia via banco de dados
 };
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -306,10 +307,12 @@ discordClient.on('interactionCreate', async interaction => {
 
         const member = interaction.member;
         if (member && member.premiumSince) {
-            if (PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME] && !PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].includes(uuid)) {
-                PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].push(uuid);
-            }
-            return interaction.editReply({ content: `✅ Conta **${nick}** vinculada! Como você já tem Boost, a capa **${BOOSTER_CAPE_NAME}** foi liberada.` });
+            await globalCapesCollection.updateOne(
+                { uuid },
+                { $set: { cape_name: BOOSTER_CAPE_NAME } },
+                { upsert: true }
+            );
+            return interaction.editReply({ content: `✅ Conta **${nick}** vinculada! Como você já tem Boost, a capa **${BOOSTER_CAPE_NAME}** foi liberada e salva permanentemente no banco.` });
         }
 
         return interaction.editReply({ content: `✅ Conta **${nick}** vinculada com sucesso! Ao dar Boost no servidor, a capa será liberada automaticamente.` });
@@ -324,19 +327,15 @@ discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
     const hasBoost = Boolean(newMember.premiumSince);
 
     if (!hadBoost && hasBoost) {
-        if (PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME] && !PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].includes(linked.uuid)) {
-            PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].push(linked.uuid);
-            console.log(`[BOOST] Capa liberada para UUID: ${linked.uuid} (${linked.username})`);
-        }
+        await globalCapesCollection.updateOne(
+            { uuid: linked.uuid },
+            { $set: { cape_name: BOOSTER_CAPE_NAME } },
+            { upsert: true }
+        );
+        console.log(`[BOOST] Capa ${BOOSTER_CAPE_NAME} salva no banco para UUID: ${linked.uuid} (${linked.username})`);
     } else if (hadBoost && !hasBoost) {
-        if (PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME]) {
-            const index = PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].indexOf(linked.uuid);
-            if (index !== -1) {
-                PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].splice(index, 1);
-                await globalCapesCollection.deleteOne({ uuid: linked.uuid, cape_name: BOOSTER_CAPE_NAME });
-                console.log(`[BOOST REMOVIDO] Capa removida de UUID: ${linked.uuid}`);
-            }
-        }
+        await globalCapesCollection.deleteOne({ uuid: linked.uuid, cape_name: BOOSTER_CAPE_NAME });
+        console.log(`[BOOST REMOVIDO] Capa removida do banco para UUID: ${linked.uuid}`);
     }
 });
 
