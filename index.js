@@ -14,7 +14,7 @@ const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const MONGO_URI = process.env.MONGO_URI;
-const BOOSTER_CAPE_NAME = "Nitro"; // Capa concedida ao dar Boost
+const BOOSTER_CAPE_NAME = "Nitro"; 
 
 // Conexão com o MongoDB
 let db, globalCapesCollection, linkedAccountsCollection, boostersCollection;
@@ -33,7 +33,7 @@ async function connectDB() {
         db = client.db("netcapes_db");
         globalCapesCollection = db.collection("globalCapes");
         linkedAccountsCollection = db.collection("linkedAccounts");
-        boostersCollection = db.collection("boosters"); // Coleção separada para guardar quem tem direito ao Nitro
+        boostersCollection = db.collection("boosters");
         console.log("✅ Conectado ao MongoDB Atlas com sucesso!");
     } catch (e) {
         console.error("Erro ao conectar ao MongoDB:", e);
@@ -52,7 +52,7 @@ const ALLOWED_CAPES = new Set([
     "Moonlight_Trail", "MrMessiah", "New_Years", "Oxeye", "Pan", 
     "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
     "Translator", "Turtle", "Valentine", "Vanilla", 
-    "Yearn", "Zombie_Horse", "Brasil"
+    "Yearn", "Zombie_Horse", "Brasil", "Nitro"
 ]);
 
 const PAID_CAPES_WHITELIST = {
@@ -163,7 +163,6 @@ const PAID_CAPES_WHITELIST = {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-// Rota raiz adicionada para o UptimeRobot manter o Render acordado
 app.get('/', (req, res) => {
     res.status(200).send('NetCapes API & Bot estao online!');
 });
@@ -190,17 +189,18 @@ app.get('/netcapes', async (req, res) => {
       let uuid = item.uuid;
       let capeName = item.cape_name;
       
-      // Valida se é pública, se está na whitelist paga OU se é a capa Nitro e o usuário é booster
-      if (ALLOWED_CAPES.has(capeName) || 
-          (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid)) ||
-          (capeName === BOOSTER_CAPE_NAME)) {
-        
-          // Se for Nitro, faz uma checagem rápida no banco de boosters para garantir que ele ainda tem direito
-          if (capeName === BOOSTER_CAPE_NAME) {
-              const isBooster = await boostersCollection.findOne({ uuid });
-              if (!isBooster) continue; // Se perdeu o boost, não envia essa capa na lista pública
-          }
+      // Validação flexível e segura para garantir que o mod aceite a capa listada
+      const isAllowed = Array.from(ALLOWED_CAPES).some(c => c.toLowerCase() === capeName.toLowerCase());
+      
+      let isPaidAuthorized = false;
+      for (const [cName, uuids] of Object.entries(PAID_CAPES_WHITELIST)) {
+        if (cName.toLowerCase() === capeName.toLowerCase() && uuids.includes(uuid)) {
+          isPaidAuthorized = true;
+          break;
+        }
+      }
 
+      if (isAllowed || isPaidAuthorized) {
         responseArray.push({
           uuid: uuid,
           cape_name: capeName
@@ -226,14 +226,14 @@ app.post('/netcapes', async (req, res) => {
   }
 
   try {
-    // Se o usuário removeu a capa
     if (!cape_name || cape_name === '') {
       await globalCapesCollection.deleteOne({ uuid });
       return res.json({ success: true });
     }
 
-    // Se for uma capa pública, salva livremente
-    if (ALLOWED_CAPES.has(cape_name)) {
+    // Validação flexível para capas públicas/livres
+    const isAllowed = Array.from(ALLOWED_CAPES).some(c => c.toLowerCase() === cape_name.toLowerCase());
+    if (isAllowed) {
       await globalCapesCollection.updateOne(
         { uuid },
         { $set: { cape_name } },
@@ -242,28 +242,19 @@ app.post('/netcapes', async (req, res) => {
       return res.json({ success: true });
     }
 
-    // Se for a capa do Nitro, verifica se o usuário realmente tem boost ativo no banco de boosters
-    if (cape_name === BOOSTER_CAPE_NAME) {
-      const isBooster = await boostersCollection.findOne({ uuid });
-      if (!isBooster) {
-        return res.status(403).json({ error: 'Forbidden: You do not have an active server boost' });
-      }
-    } else {
-      // Validação das outras capas da whitelist paga normal
-      let isAuthorized = false;
-      for (const [capeName, uuids] of Object.entries(PAID_CAPES_WHITELIST)) {
-        if (capeName === cape_name && uuids.includes(uuid)) {
-          isAuthorized = true;
-          break;
-        }
-      }
-
-      if (!isAuthorized) {
-        return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+    // Validação das capas pagas restantes
+    let isAuthorized = false;
+    for (const [cName, uuids] of Object.entries(PAID_CAPES_WHITELIST)) {
+      if (cName.toLowerCase() === cape_name.toLowerCase() && uuids.includes(uuid)) {
+        isAuthorized = true;
+        break;
       }
     }
 
-    // Salva a capa escolhida pelo usuário no banco
+    if (!isAuthorized) {
+      return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+    }
+
     await globalCapesCollection.updateOne(
       { uuid },
       { $set: { cape_name } },
@@ -348,7 +339,6 @@ discordClient.on('interactionCreate', async interaction => {
             { upsert: true }
         );
 
-        // Se o usuário já tiver boost ao vincular, registra o direito ao Nitro na coleção de boosters
         const member = interaction.member;
         if (member && member.premiumSince) {
             await boostersCollection.updateOne(
@@ -358,11 +348,10 @@ discordClient.on('interactionCreate', async interaction => {
             );
         }
 
-        return interaction.editReply({ content: `✅ Conta **${nick}** vinculada com sucesso! Agora você pode escolher qualquer capa livremente.` });
+        return interaction.editReply({ content: `✅ Conta **${nick}** vinculada com sucesso!` });
     }
 });
 
-// Monitora se o usuário deu ou tirou o Boost
 discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
     const linked = await linkedAccountsCollection.findOne({ discordId: newMember.id });
     if (!linked) return;
@@ -371,21 +360,13 @@ discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
     const hasBoost = Boolean(newMember.premiumSince);
 
     if (!hadBoost && hasBoost) {
-        // Registra no sistema que ele tem direito à capa de booster
         await boostersCollection.updateOne(
             { uuid: linked.uuid },
             { $set: { discordId: newMember.id } },
             { upsert: true }
         );
-        console.log(`[BOOST] Direito à capa Nitro liberado para UUID: ${linked.uuid}`);
     } else if (hadBoost && !hasBoost) {
-        // Remove o direito ao booster e, se ele estiver usando o Nitro no momento, limpa para evitar uso indevido
         await boostersCollection.deleteOne({ uuid: linked.uuid });
-        const currentActive = await globalCapesCollection.findOne({ uuid: linked.uuid });
-        if (currentActive && currentActive.cape_name === BOOSTER_CAPE_NAME) {
-            await globalCapesCollection.deleteOne({ uuid: linked.uuid });
-        }
-        console.log(`[BOOST REMOVIDO] Direito à capa Nitro revogado para UUID: ${linked.uuid}`);
     }
 });
 
