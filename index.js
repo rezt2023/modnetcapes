@@ -163,6 +163,11 @@ const PAID_CAPES_WHITELIST = {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Rota raiz adicionada para o UptimeRobot manter o Render acordado
+app.get('/', (req, res) => {
+    res.status(200).send('NetCapes API & Bot estao online!');
+});
+
 app.get('/netcapes/exclusive', (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
   if (clientVersion < "1.3.0") {
