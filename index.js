@@ -14,10 +14,10 @@ const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 const MONGO_URI = process.env.MONGO_URI;
-const BOOSTER_CAPE_NAME = "Nitro"; // Capa concedida automaticamente ao dar Boost
+const BOOSTER_CAPE_NAME = "Nitro"; // Capa concedida ao dar Boost
 
 // Conexão com o MongoDB
-let db, globalCapesCollection, linkedAccountsCollection;
+let db, globalCapesCollection, linkedAccountsCollection, boostersCollection;
 
 async function connectDB() {
     if (!MONGO_URI) {
@@ -33,6 +33,7 @@ async function connectDB() {
         db = client.db("netcapes_db");
         globalCapesCollection = db.collection("globalCapes");
         linkedAccountsCollection = db.collection("linkedAccounts");
+        boostersCollection = db.collection("boosters"); // Coleção separada para guardar quem tem direito ao Nitro
         console.log("✅ Conectado ao MongoDB Atlas com sucesso!");
     } catch (e) {
         console.error("Erro ao conectar ao MongoDB:", e);
@@ -210,32 +211,50 @@ app.post('/netcapes', async (req, res) => {
   }
 
   try {
-    // Se o usuário removeu a capa, apaga do banco
+    // Se o usuário removeu a capa
     if (!cape_name || cape_name === '') {
       await globalCapesCollection.deleteOne({ uuid });
       return res.json({ success: true });
     }
 
-    // Se for uma capa pública (como a do Brasil), ela é permitida e ignorada no banco (não apaga nem salva)
+    // Se for uma capa pública, salva livremente
     if (ALLOWED_CAPES.has(cape_name)) {
-      return res.json({ success: true });
-    }
-
-    // Se for a capa Nitro, valida e salva no banco de dados
-    if (cape_name === BOOSTER_CAPE_NAME) {
-      if (PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME] && !PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].includes(uuid)) {
-        return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
-      }
-
       await globalCapesCollection.updateOne(
         { uuid },
-        { $set: { cape_name: BOOSTER_CAPE_NAME } },
+        { $set: { cape_name } },
         { upsert: true }
       );
       return res.json({ success: true });
     }
 
-    return res.status(403).json({ error: 'Forbidden: Unauthorized cape name' });
+    // Se for a capa do Nitro, verifica se o usuário realmente tem boost ativo no sistema do Discord
+    if (cape_name === BOOSTER_CAPE_NAME) {
+      const isBooster = await boostersCollection.findOne({ uuid });
+      if (!isBooster) {
+        return res.status(403).json({ error: 'Forbidden: You do not have an active server boost' });
+      }
+    } else {
+      // Validação das outras capas da whitelist paga normal
+      let isAuthorized = false;
+      for (const [capeName, uuids] of Object.entries(PAID_CAPES_WHITELIST)) {
+        if (capeName === cape_name && uuids.includes(uuid)) {
+          isAuthorized = true;
+          break;
+        }
+      }
+
+      if (!isAuthorized) {
+        return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+      }
+    }
+
+    // Salva a capa escolhida pelo usuário no banco
+    await globalCapesCollection.updateOne(
+      { uuid },
+      { $set: { cape_name } },
+      { upsert: true }
+    );
+    res.json({ success: true });
   } catch (e) {
     res.status(500).json({ error: "Erro interno ao salvar capa" });
   }
@@ -271,7 +290,7 @@ async function registerSlashCommands() {
     const commands = [
         new SlashCommandBuilder()
             .setName('vincular')
-            .setDescription('Vincula seu nick do Minecraft ao Discord para liberar a capa de Booster.')
+            .setDescription('Vincula seu nick do Minecraft ao Discord.')
             .addStringOption(option => 
                 option.setName('nick')
                     .setDescription('Seu nick exato do Minecraft')
@@ -314,20 +333,21 @@ discordClient.on('interactionCreate', async interaction => {
             { upsert: true }
         );
 
+        // Se o usuário já tiver boost ao vincular, registra o direito ao Nitro na coleção de boosters
         const member = interaction.member;
         if (member && member.premiumSince) {
-            await globalCapesCollection.updateOne(
+            await boostersCollection.updateOne(
                 { uuid },
-                { $set: { cape_name: BOOSTER_CAPE_NAME } },
+                { $set: { discordId: interaction.user.id } },
                 { upsert: true }
             );
-            return interaction.editReply({ content: `✅ Conta **${nick}** vinculada! Como você já tem Boost, a capa **${BOOSTER_CAPE_NAME}** foi liberada e salva permanentemente no banco.` });
         }
 
-        return interaction.editReply({ content: `✅ Conta **${nick}** vinculada com sucesso! Ao dar Boost no servidor, a capa será liberada automaticamente.` });
+        return interaction.editReply({ content: `✅ Conta **${nick}** vinculada com sucesso! Agora você pode escolher qualquer capa livremente.` });
     }
 });
 
+// Monitora se o usuário deu ou tirou o Boost
 discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
     const linked = await linkedAccountsCollection.findOne({ discordId: newMember.id });
     if (!linked) return;
@@ -336,15 +356,21 @@ discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
     const hasBoost = Boolean(newMember.premiumSince);
 
     if (!hadBoost && hasBoost) {
-        await globalCapesCollection.updateOne(
+        // Registra no sistema que ele tem direito à capa de booster
+        await boostersCollection.updateOne(
             { uuid: linked.uuid },
-            { $set: { cape_name: BOOSTER_CAPE_NAME } },
+            { $set: { discordId: newMember.id } },
             { upsert: true }
         );
-        console.log(`[BOOST] Capa ${BOOSTER_CAPE_NAME} salva no banco para UUID: ${linked.uuid} (${linked.username})`);
+        console.log(`[BOOST] Direito à capa Nitro liberado para UUID: ${linked.uuid}`);
     } else if (hadBoost && !hasBoost) {
-        await globalCapesCollection.deleteOne({ uuid: linked.uuid, cape_name: BOOSTER_CAPE_NAME });
-        console.log(`[BOOST REMOVIDO] Capa removida do banco para UUID: ${linked.uuid}`);
+        // Remove o direito ao booster e, se ele estiver usando o Nitro no momento, limpa para evitar uso indevido
+        await boostersCollection.deleteOne({ uuid: linked.uuid });
+        const currentActive = await globalCapesCollection.findOne({ uuid: linked.uuid });
+        if (currentActive && currentActive.cape_name === BOOSTER_CAPE_NAME) {
+            await globalCapesCollection.deleteOne({ uuid: linked.uuid });
+        }
+        console.log(`[BOOST REMOVIDO] Direito à capa Nitro revogado para UUID: ${linked.uuid}`);
     }
 });
 
@@ -355,7 +381,7 @@ async function start() {
         if (DISCORD_BOT_TOKEN && DISCORD_BOT_TOKEN !== "SEU_TOKEN_DO_BOT_AQUI") {
             discordClient.login(DISCORD_BOT_TOKEN);
         } else {
-            console.warn("Aviso: Token do bot não configurado. Funcionalidade de Boost inativa.");
+            console.warn("Aviso: Token do bot não configurado.");
         }
     });
 }
