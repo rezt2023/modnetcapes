@@ -52,7 +52,7 @@ const ALLOWED_CAPES = new Set([
     "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
     "Translator", "Turtle", "Valentine", "Vanilla", 
     "Yearn", "Zombie_Horse", "Developer", "YouTuber",
-    "Donator", "Acreano", "Nitro"
+    "Donator", "Acreano", "Brasil"
 ]);
 
 const PAID_CAPES_WHITELIST = {
