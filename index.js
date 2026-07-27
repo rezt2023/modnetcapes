@@ -52,7 +52,7 @@ const ALLOWED_CAPES = new Set([
     "Moonlight_Trail", "MrMessiah", "New_Years", "Oxeye", "Pan", 
     "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
     "Translator", "Turtle", "Valentine", "Vanilla", 
-    "Yearn", "Zombie_Horse", "Brasil", "Nitro"
+    "Yearn", "Zombie_Horse", "Brasil"
 ]);
 
 const PAID_CAPES_WHITELIST = {
