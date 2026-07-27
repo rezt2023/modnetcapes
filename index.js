@@ -154,11 +154,6 @@ const PAID_CAPES_WHITELIST = {
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
-    "Nitro": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
-        "a1541f0e-a467-403b-bdf2-759cb33647bf",
-        "391d0bc2-1210-402e-88d4-063a1d30dc7c"
-    ],
     "Vape_V4": [
         "7fc49989-b62b-4877-833a-19ced916cf43",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
@@ -195,7 +190,17 @@ app.get('/netcapes', async (req, res) => {
       let uuid = item.uuid;
       let capeName = item.cape_name;
       
-      if (ALLOWED_CAPES.has(capeName) || (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid))) {
+      // Valida se é pública, se está na whitelist paga OU se é a capa Nitro e o usuário é booster
+      if (ALLOWED_CAPES.has(capeName) || 
+          (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid)) ||
+          (capeName === BOOSTER_CAPE_NAME)) {
+        
+          // Se for Nitro, faz uma checagem rápida no banco de boosters para garantir que ele ainda tem direito
+          if (capeName === BOOSTER_CAPE_NAME) {
+              const isBooster = await boostersCollection.findOne({ uuid });
+              if (!isBooster) continue; // Se perdeu o boost, não envia essa capa na lista pública
+          }
+
         responseArray.push({
           uuid: uuid,
           cape_name: capeName
@@ -237,7 +242,7 @@ app.post('/netcapes', async (req, res) => {
       return res.json({ success: true });
     }
 
-    // Se for a capa do Nitro, verifica se o usuário realmente tem boost ativo no sistema do Discord
+    // Se for a capa do Nitro, verifica se o usuário realmente tem boost ativo no banco de boosters
     if (cape_name === BOOSTER_CAPE_NAME) {
       const isBooster = await boostersCollection.findOne({ uuid });
       if (!isBooster) {
