@@ -37,8 +37,6 @@ async function connectDB() {
     }
 }
 
-connectDB();
-
 const ALLOWED_CAPES = new Set([
     "15th_Anniversary", "2011", "2012", "2013", "2015", "2016", 
     "Bacon", "Birthday", "Cherry_Blossom", "cheapsh0t", 
@@ -339,11 +337,16 @@ discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
     }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor seguro rodando na porta ${PORT}`);
-  if (DISCORD_BOT_TOKEN && DISCORD_BOT_TOKEN !== "SEU_TOKEN_DO_BOT_AQUI") {
-      discordClient.login(DISCORD_BOT_TOKEN);
-  } else {
-      console.warn("Aviso: Token do bot não configurado. Funcionalidade de Boost inativa.");
-  }
-});
+async function start() {
+    await connectDB();
+    app.listen(PORT, () => {
+        console.log(`Servidor seguro rodando na porta ${PORT}`);
+        if (DISCORD_BOT_TOKEN && DISCORD_BOT_TOKEN !== "SEU_TOKEN_DO_BOT_AQUI") {
+            discordClient.login(DISCORD_BOT_TOKEN);
+        } else {
+            console.warn("Aviso: Token do bot não configurado. Funcionalidade de Boost inativa.");
+        }
+    });
+}
+
+start();
