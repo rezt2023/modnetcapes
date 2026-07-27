@@ -1,6 +1,5 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
+const { MongoClient } = require('mongodb');
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 const app = express();
@@ -9,43 +8,36 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // ==========================================
-// CONFIGURAÇÕES DO DISCORD
+// CONFIGURAÇÕES DO DISCORD E BANCO DE DADOS
 // ==========================================
 const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
+const MONGO_URI = process.env.MONGO_URI;
 const BOOSTER_CAPE_NAME = "Nitro"; // Capa concedida automaticamente ao dar Boost
 
-// ==========================================
-// ARQUIVO DE PERSISTÊNCIA E DADOS LOCAIS
-// ==========================================
-const DATA_FILE = path.join(__dirname, 'capes_data.json');
+// Conexão com o MongoDB
+let db, globalCapesCollection, linkedAccountsCollection;
 
-let globalCapes = {};
-let linkedAccounts = {}; // discordId: { uuid, username }
-
-function loadData() {
-    if (fs.existsSync(DATA_FILE)) {
-        try {
-            const raw = fs.readFileSync(DATA_FILE, 'utf8');
-            const data = JSON.parse(raw);
-            if (data.globalCapes) globalCapes = data.globalCapes;
-            if (data.linkedAccounts) linkedAccounts = data.linkedAccounts;
-        } catch (e) {
-            console.error("Erro ao carregar capes_data.json:", e);
-        }
+async function connectDB() {
+    if (!MONGO_URI) {
+        console.error("❌ ERRO: A variável de ambiente MONGO_URI não está configurada!");
+        process.exit(1);
     }
-}
-
-function saveData() {
     try {
-        fs.writeFileSync(DATA_FILE, JSON.stringify({ globalCapes, linkedAccounts }, null, 2));
+        const client = new MongoClient(MONGO_URI);
+        await client.connect();
+        db = client.db("netcapes_db");
+        globalCapesCollection = db.collection("globalCapes");
+        linkedAccountsCollection = db.collection("linkedAccounts");
+        console.log("✅ Conectado ao MongoDB Atlas com sucesso!");
     } catch (e) {
-        console.error("Erro ao salvar capes_data.json:", e);
+        console.error("Erro ao conectar ao MongoDB:", e);
+        process.exit(1);
     }
 }
 
-loadData();
+connectDB();
 
 const ALLOWED_CAPES = new Set([
     "15th_Anniversary", "2011", "2012", "2013", "2015", "2016", 
@@ -173,27 +165,34 @@ app.get('/netcapes/exclusive', (req, res) => {
   res.json(PAID_CAPES_WHITELIST);
 });
 
-app.get('/netcapes', (req, res) => {
+app.get('/netcapes', async (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
   if (clientVersion < "1.3.0") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
 
-  let responseArray = [];
-  for (let uuid in globalCapes) {
-    let capeName = globalCapes[uuid];
-    
-    if (ALLOWED_CAPES.has(capeName) || (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid))) {
-      responseArray.push({
-        uuid: uuid,
-        cape_name: capeName
-      });
+  try {
+    const globalCapes = await globalCapesCollection.find({}).toArray();
+    let responseArray = [];
+
+    for (let item of globalCapes) {
+      let uuid = item.uuid;
+      let capeName = item.cape_name;
+      
+      if (ALLOWED_CAPES.has(capeName) || (PAID_CAPES_WHITELIST[capeName] && PAID_CAPES_WHITELIST[capeName].includes(uuid))) {
+        responseArray.push({
+          uuid: uuid,
+          cape_name: capeName
+        });
+      }
     }
+    res.json(responseArray);
+  } catch (e) {
+    res.status(500).json({ error: "Erro interno ao buscar capas" });
   }
-  res.json(responseArray);
 });
 
-app.post('/netcapes', (req, res) => {
+app.post('/netcapes', async (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
   if (clientVersion < "1.3.0") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
@@ -205,24 +204,30 @@ app.post('/netcapes', (req, res) => {
     return res.status(400).json({ error: 'Invalid or missing UUID' });
   }
 
-  if (!cape_name || cape_name === '') {
-    delete globalCapes[uuid];
-    saveData();
-    return res.json({ success: true });
-  }
-
-  if (PAID_CAPES_WHITELIST[cape_name]) {
-    if (!PAID_CAPES_WHITELIST[cape_name].includes(uuid)) {
-      return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+  try {
+    if (!cape_name || cape_name === '') {
+      await globalCapesCollection.deleteOne({ uuid });
+      return res.json({ success: true });
     }
-  } 
-  else if (!ALLOWED_CAPES.has(cape_name)) {
-    return res.status(403).json({ error: 'Forbidden: Unauthorized cape name' });
-  }
 
-  globalCapes[uuid] = cape_name;
-  saveData();
-  res.json({ success: true });
+    if (PAID_CAPES_WHITELIST[cape_name]) {
+      if (!PAID_CAPES_WHITELIST[cape_name].includes(uuid)) {
+        return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+      }
+    } 
+    else if (!ALLOWED_CAPES.has(cape_name)) {
+      return res.status(403).json({ error: 'Forbidden: Unauthorized cape name' });
+    }
+
+    await globalCapesCollection.updateOne(
+      { uuid },
+      { $set: { cape_name } },
+      { upsert: true }
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: "Erro interno ao salvar capa" });
+  }
 });
 
 // ==========================================
@@ -251,6 +256,7 @@ async function fetchUUIDFromMojang(username) {
 }
 
 async function registerSlashCommands() {
+    if (!DISCORD_BOT_TOKEN || !DISCORD_CLIENT_ID || !GUILD_ID) return;
     const commands = [
         new SlashCommandBuilder()
             .setName('vincular')
@@ -291,8 +297,11 @@ discordClient.on('interactionCreate', async interaction => {
             return interaction.editReply({ content: `❌ Conta de Minecraft **${nick}** não encontrada.` });
         }
 
-        linkedAccounts[interaction.user.id] = { uuid, username: nick };
-        saveData();
+        await linkedAccountsCollection.updateOne(
+            { discordId: interaction.user.id },
+            { $set: { uuid, username: nick } },
+            { upsert: true }
+        );
 
         const member = interaction.member;
         if (member && member.premiumSince) {
@@ -306,8 +315,8 @@ discordClient.on('interactionCreate', async interaction => {
     }
 });
 
-discordClient.on('guildMemberUpdate', (oldMember, newMember) => {
-    const linked = linkedAccounts[newMember.id];
+discordClient.on('guildMemberUpdate', async (oldMember, newMember) => {
+    const linked = await linkedAccountsCollection.findOne({ discordId: newMember.id });
     if (!linked) return;
 
     const hadBoost = Boolean(oldMember.premiumSince);
@@ -323,10 +332,7 @@ discordClient.on('guildMemberUpdate', (oldMember, newMember) => {
             const index = PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].indexOf(linked.uuid);
             if (index !== -1) {
                 PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].splice(index, 1);
-                if (globalCapes[linked.uuid] === BOOSTER_CAPE_NAME) {
-                    delete globalCapes[linked.uuid];
-                    saveData();
-                }
+                await globalCapesCollection.deleteOne({ uuid: linked.uuid, cape_name: BOOSTER_CAPE_NAME });
                 console.log(`[BOOST REMOVIDO] Capa removida de UUID: ${linked.uuid}`);
             }
         }
