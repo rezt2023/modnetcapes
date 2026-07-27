@@ -210,23 +210,27 @@ app.post('/netcapes', async (req, res) => {
   }
 
   try {
+    // Se o usuário removeu a capa, apaga do banco
     if (!cape_name || cape_name === '') {
       await globalCapesCollection.deleteOne({ uuid });
       return res.json({ success: true });
     }
 
-    if (PAID_CAPES_WHITELIST[cape_name]) {
-      if (!PAID_CAPES_WHITELIST[cape_name].includes(uuid)) {
-        return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
-      }
-    } 
-    else if (!ALLOWED_CAPES.has(cape_name)) {
-      return res.status(403).json({ error: 'Forbidden: Unauthorized cape name' });
+    // Se NÃO for a capa Nitro, o servidor ignora e NÃO salva no banco de dados (mantém limpo)
+    if (cape_name !== BOOSTER_CAPE_NAME) {
+      await globalCapesCollection.deleteOne({ uuid }); // Remove do banco caso estivesse lá antes
+      return res.json({ success: true });
     }
 
+    // Se for o Nitro, valida se o UUID está autorizado
+    if (PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME] && !PAID_CAPES_WHITELIST[BOOSTER_CAPE_NAME].includes(uuid)) {
+      return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+    }
+
+    // Salva APENAS o Nitro no banco de dados
     await globalCapesCollection.updateOne(
       { uuid },
-      { $set: { cape_name } },
+      { $set: { cape_name: BOOSTER_CAPE_NAME } },
       { upsert: true }
     );
     res.json({ success: true });
