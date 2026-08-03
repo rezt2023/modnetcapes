@@ -52,7 +52,11 @@ const ALLOWED_CAPES = new Set([
     "Moonlight_Trail", "MrMessiah", "New_Years", "Oxeye", "Pan", 
     "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
     "Translator", "Turtle", "Valentine", "Vanilla", 
-    "Yearn", "Zombie_Horse", "Brasil"
+    "Yearn", "Zombie_Horse", "Brasil", "Cape_Xbox_360",
+    "Progress_Pride_Cape", "TWoM_Cape_3", "TWoM_Cape_4", "TWoM_Cape_5",
+    "TWoM_Cape_6", "TWoM_Cape_7", "TWoM_Cape_8", "TWoM_Cape_10",
+    "TWoM_Cape_11", "TWoM_Cape_12", "TWoM_Cape_13", "TWoM_Cape_16",
+    "Unused_Cape_1", "Unused_Cape_2", "Unused_Cape_3", "Xbox_1st_Birthday_Cape"
 ]);
 
 const PAID_CAPES_WHITELIST = {
