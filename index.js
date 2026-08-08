@@ -51,8 +51,7 @@ const ALLOWED_CAPES = new Set([
     "Sculk", "Sea", "Shark", "Simpson", 
     "Sky", "Snow", "Sonic", "Star", "Sunflower", 
     "Void", "Waffle", "Waters", "Watermelon", 
-    "Wheat", "Wings", "Wood", "Brasil",
-    "PinkTree"
+    "Wheat", "Wings", "Wood", "Brasil"
 ]);
 
 const PAID_CAPES_WHITELIST = {
@@ -158,6 +157,11 @@ const PAID_CAPES_WHITELIST = {
         "7fc49989-b62b-4877-833a-19ced916cf43",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
+    ],
+    "Abyssal_Thorn": [
+        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "da27c6a8-123b-46ae-8041-6af550b04759",
+        "25153cba-82e4-4ef2-b793-635fc0c77e74"
     ]
 };
 
