@@ -62,6 +62,7 @@ const PAID_CAPES_WHITELIST = {
         "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
+        "da27c6a8-123b-46ae-8041-6af550b04759"
     ],
     "Donator": [
         "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
