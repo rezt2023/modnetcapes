@@ -168,7 +168,7 @@ app.get('/', (req, res) => {
 
 app.get('/netcapes/exclusive', (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.1") {
+  if (clientVersion < "1.3.2") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
   res.json(PAID_CAPES_WHITELIST);
@@ -176,7 +176,7 @@ app.get('/netcapes/exclusive', (req, res) => {
 
 app.get('/netcapes', async (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.1") {
+  if (clientVersion < "1.3.2") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
 
@@ -214,7 +214,7 @@ app.get('/netcapes', async (req, res) => {
 
 app.post('/netcapes', async (req, res) => {
   const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.1") {
+  if (clientVersion < "1.3.2") {
     return res.status(426).json({ error: "Outdated version. Please update your mod." });
   }
 
