@@ -51,7 +51,8 @@ const ALLOWED_CAPES = new Set([
     "Sculk", "Sea", "Shark", "Simpson", 
     "Sky", "Snow", "Sonic", "Star", "Sunflower", 
     "Void", "Waffle", "Waters", "Watermelon", 
-    "Wheat", "Wings", "Wood", "Brasil"
+    "Wheat", "Wings", "Wood", "Brasil",
+    "PinkTree"
 ]);
 
 const PAID_CAPES_WHITELIST = {
