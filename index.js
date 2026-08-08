@@ -162,6 +162,7 @@ const PAID_CAPES_WHITELIST = {
         "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "da27c6a8-123b-46ae-8041-6af550b04759",
         "25153cba-82e4-4ef2-b793-635fc0c77e74"
+        "a1541f0e-a467-403b-bdf2-759cb33647bf"
     ]
 };
 
