@@ -42,21 +42,16 @@ async function connectDB() {
 }
 
 const ALLOWED_CAPES = new Set([
-    "15th_Anniversary", "2011", "2012", "2013", "2015", "2016", 
-    "Bacon", "Birthday", "Cherry_Blossom", "cheapsh0t", 
-    "Chinese_Translator", "Christmas", "Classic_Mojang", "Cobalt", 
-    "Common", "Copper", "Crafter", "dannyBstyle", "Document", 
-    "Followers", "Founders", "Home", "JulianClark", "MCC_15th_Year", 
-    "Menace", "Migrator", "Millionth", "Minecraft_Experience", 
-    "Moderator", "Mojang_Office", "Mojang_Studios", "Mojang", 
-    "Moonlight_Trail", "MrMessiah", "New_Years", "Oxeye", "Pan", 
-    "Prismarine", "Purple_Heart", "Realms_Map_Maker", "Scrolls_Champion", 
-    "Translator", "Turtle", "Valentine", "Vanilla", 
-    "Yearn", "Zombie_Horse", "Brasil", "Cape_Xbox_360",
-    "Progress_Pride_Cape", "TWoM_Cape_3", "TWoM_Cape_4", "TWoM_Cape_5",
-    "TWoM_Cape_6", "TWoM_Cape_7", "TWoM_Cape_8", "TWoM_Cape_10",
-    "TWoM_Cape_11", "TWoM_Cape_12", "TWoM_Cape_13", "TWoM_Cape_16",
-    "Unused_Cape_1", "Unused_Cape_2", "Unused_Cape_3", "Xbox_1st_Birthday_Cape"
+    "Amethyst", "Axolotl", "Bee", "Blaze", "Bread", "Cake", 
+    "Cherry", "CreeperCoin", "Discord", "Dog", 
+    "Duck", "Feather", "Frog", "Ghast", 
+    "Glass", "Gold", "Ho", "Kitty", "Landscape", 
+    "Lunar", "Migrator_Lava", "Night", "Panda", "Pixelcat", 
+    "Prismarine", "Red_Flower", "Retro", "Rooster", 
+    "Sculk", "Sea", "Shark", "Simpson", 
+    "Sky", "Snow", "Sonic", "Star", "Sunflower", 
+    "Void", "Waffle", "Waters", "Watermelon", 
+    "Wheat", "Wings", "Wood", "Brasil"
 ]);
 
 const PAID_CAPES_WHITELIST = {
