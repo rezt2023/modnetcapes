@@ -56,110 +56,110 @@ const ALLOWED_CAPES = new Set([
 
 const PAID_CAPES_WHITELIST = {
     "Developer": [
-        "7fc49989-b62b-4877-833a-19ced916cf43"
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d"
     ],
     "YouTuber": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Donator": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Acreano": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Pikachu": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Cat": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "BlackFlower": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Death_Note": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Water": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Cookie": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Bro": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "PI": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Sakura_Black": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "UuU": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Diamond_Sword": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Kirby": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "SmilePink": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Flower": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Twitch": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "CatGirl": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Vape_V4": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "a1541f0e-a467-403b-bdf2-759cb33647bf",
         "391d0bc2-1210-402e-88d4-063a1d30dc7c"
     ],
     "Abyssal_Thorn": [
-        "7fc49989-b62b-4877-833a-19ced916cf43",
+        "bc77a8a4-ddc1-4586-aab6-b19013699c0d",
         "da27c6a8-123b-46ae-8041-6af550b04759",
         "25153cba-82e4-4ef2-b793-635fc0c77e74"
     ]
