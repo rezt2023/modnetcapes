@@ -169,107 +169,129 @@ const PAID_CAPES_WHITELIST = {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// Função auxiliar para injetar os boosters atuais na whitelist de exclusivas
+async function getCompleteExclusiveWhitelist() {
+    let dynamicWhitelist = JSON.parse(JSON.stringify(PAID_CAPES_WHITELIST));
+    try {
+        const boosters = await boostersCollection.find({}).toArray();
+        let boosterUuids = boosters.map(b => b.uuid);
+
+        if (!dynamicWhitelist[BOOSTER_CAPE_NAME]) {
+            dynamicWhitelist[BOOSTER_CAPE_NAME] = [];
+        }
+        for (let u of boosterUuids) {
+            if (!dynamicWhitelist[BOOSTER_CAPE_NAME].includes(u)) {
+                dynamicWhitelist[BOOSTER_CAPE_NAME].push(u);
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao carregar boosters para a whitelist:", e);
+    }
+    return dynamicWhitelist;
+}
+
 app.get('/', (req, res) => {
     res.status(200).send('NetCapes API & Bot estao online!');
 });
 
-app.get('/netcapes/exclusive', (req, res) => {
-  const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.2") {
-    return res.status(426).json({ error: "Outdated version. Please update your mod." });
-  }
-  res.json(PAID_CAPES_WHITELIST);
+app.get('/netcapes/exclusive', async (req, res) => {
+    const clientVersion = req.headers['x-mod-version'] || "1.0.0";
+    if (clientVersion < "1.3.2") {
+        return res.status(426).json({ error: "Outdated version. Please update your mod." });
+    }
+    const completeWhitelist = await getCompleteExclusiveWhitelist();
+    res.json(completeWhitelist);
 });
 
 app.get('/netcapes', async (req, res) => {
-  const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.2") {
-    return res.status(426).json({ error: "Outdated version. Please update your mod." });
-  }
-
-  try {
-    const globalCapes = await globalCapesCollection.find({}).toArray();
-    let responseArray = [];
-
-    for (let item of globalCapes) {
-      let uuid = item.uuid;
-      let capeName = item.cape_name;
-      
-      // Validação flexível e segura para garantir que o mod aceite a capa listada
-      const isAllowed = Array.from(ALLOWED_CAPES).some(c => c.toLowerCase() === capeName.toLowerCase());
-      
-      let isPaidAuthorized = false;
-      for (const [cName, uuids] of Object.entries(PAID_CAPES_WHITELIST)) {
-        if (cName.toLowerCase() === capeName.toLowerCase() && uuids.includes(uuid)) {
-          isPaidAuthorized = true;
-          break;
-        }
-      }
-
-      if (isAllowed || isPaidAuthorized) {
-        responseArray.push({
-          uuid: uuid,
-          cape_name: capeName
-        });
-      }
+    const clientVersion = req.headers['x-mod-version'] || "1.0.0";
+    if (clientVersion < "1.3.2") {
+        return res.status(426).json({ error: "Outdated version. Please update your mod." });
     }
-    res.json(responseArray);
-  } catch (e) {
-    res.status(500).json({ error: "Erro interno ao buscar capas" });
-  }
+
+    try {
+        const globalCapes = await globalCapesCollection.find({}).toArray();
+        const currentExclusiveWhitelist = await getCompleteExclusiveWhitelist();
+        let responseArray = [];
+
+        for (let item of globalCapes) {
+            let uuid = item.uuid;
+            let capeName = item.cape_name;
+            
+            const isAllowed = Array.from(ALLOWED_CAPES).some(c => c.toLowerCase() === capeName.toLowerCase());
+            
+            let isPaidAuthorized = false;
+            for (const [cName, uuids] of Object.entries(currentExclusiveWhitelist)) {
+                if (cName.toLowerCase() === capeName.toLowerCase() && uuids.includes(uuid)) {
+                    isPaidAuthorized = true;
+                    break;
+                }
+            }
+
+            if (isAllowed || isPaidAuthorized) {
+                responseArray.push({
+                    uuid: uuid,
+                    cape_name: capeName
+                });
+            }
+        }
+        res.json(responseArray);
+    } catch (e) {
+        res.status(500).json({ error: "Erro interno ao buscar capas" });
+    }
 });
 
 app.post('/netcapes', async (req, res) => {
-  const clientVersion = req.headers['x-mod-version'] || "1.0.0";
-  if (clientVersion < "1.3.2") {
-    return res.status(426).json({ error: "Outdated version. Please update your mod." });
-  }
-
-  const { uuid, cape_name } = req.body;
-
-  if (!uuid || !UUID_REGEX.test(uuid)) {
-    return res.status(400).json({ error: 'Invalid or missing UUID' });
-  }
-
-  try {
-    if (!cape_name || cape_name === '') {
-      await globalCapesCollection.deleteOne({ uuid });
-      return res.json({ success: true });
+    const clientVersion = req.headers['x-mod-version'] || "1.0.0";
+    if (clientVersion < "1.3.2") {
+        return res.status(426).json({ error: "Outdated version. Please update your mod." });
     }
 
-    // Validação flexível para capas públicas/livres
-    const isAllowed = Array.from(ALLOWED_CAPES).some(c => c.toLowerCase() === cape_name.toLowerCase());
-    if (isAllowed) {
-      await globalCapesCollection.updateOne(
-        { uuid },
-        { $set: { cape_name } },
-        { upsert: true }
-      );
-      return res.json({ success: true });
+    const { uuid, cape_name } = req.body;
+
+    if (!uuid || !UUID_REGEX.test(uuid)) {
+        return res.status(400).json({ error: 'Invalid or missing UUID' });
     }
 
-    // Validação das capas pagas restantes
-    let isAuthorized = false;
-    for (const [cName, uuids] of Object.entries(PAID_CAPES_WHITELIST)) {
-      if (cName.toLowerCase() === cape_name.toLowerCase() && uuids.includes(uuid)) {
-        isAuthorized = true;
-        break;
-      }
-    }
+    try {
+        if (!cape_name || cape_name === '') {
+            await globalCapesCollection.deleteOne({ uuid });
+            return res.json({ success: true });
+        }
 
-    if (!isAuthorized) {
-      return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
-    }
+        const isAllowed = Array.from(ALLOWED_CAPES).some(c => c.toLowerCase() === cape_name.toLowerCase());
+        if (isAllowed) {
+            await globalCapesCollection.updateOne(
+                { uuid },
+                { $set: { cape_name } },
+                { upsert: true }
+            );
+            return res.json({ success: true });
+        }
 
-    await globalCapesCollection.updateOne(
-      { uuid },
-      { $set: { cape_name } },
-      { upsert: true }
-    );
-    res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: "Erro interno ao salvar capa" });
-  }
+        const currentExclusiveWhitelist = await getCompleteExclusiveWhitelist();
+        let isAuthorized = false;
+
+        for (const [cName, uuids] of Object.entries(currentExclusiveWhitelist)) {
+            if (cName.toLowerCase() === cape_name.toLowerCase() && uuids.includes(uuid)) {
+                isAuthorized = true;
+                break;
+            }
+        }
+
+        if (!isAuthorized) {
+            return res.status(403).json({ error: 'Forbidden: You do not own this paid cape' });
+        }
+
+        await globalCapesCollection.updateOne(
+            { uuid },
+            { $set: { cape_name } },
+            { upsert: true }
+        );
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Erro interno ao salvar capa" });
+    }
 });
 
 // ==========================================
